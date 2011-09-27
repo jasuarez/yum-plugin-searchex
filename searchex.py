@@ -83,6 +83,7 @@ class SearchexCommand:
         #import pdb;pdb.set_trace()
         match_on_list = []
         match_on_pkg = []
+        result = []
 
         for pattern in re.finditer(MATCH_ALL, extcmds[0]):
             f=_build_list_filter(pattern.group('where_l'))
@@ -94,17 +95,14 @@ class SearchexCommand:
 
         pkglist=_filter_list(base.returnPkgLists(""), match_on_list)
         for pkg in pkglist.installed:
-            if _filter_package(pkg, match_on_pkg) != None:
-                print "(i) %s:  %s" % (pkg.name, pkg.summary)
+            if _filter_package(pkg, match_on_pkg) and ("i", pkg.name, pkg.summary) not in result:
+                result.append (("i", pkg.name, pkg.summary))
         for pkg in pkglist.available:
-            if _filter_package(pkg, match_on_pkg) != None:
-                print "(a) %s:  %s" % (pkg.name, pkg.summary)
-
-        # pkglist=base.returnPkgLists("")
-        # for pkg in pkglist.available:
-        #     for pattern in re.finditer(MATCH_ALL, extcmds[0]):
-        #         if _match_name(pkg, pattern.group('what_p')):
-        #             print "%s:  %s" % (pkg.name, pkg.summary)
+            if _filter_package(pkg, match_on_pkg) and ("a", pkg.name, pkg.summary) not in result:
+                result.append(("a", pkg.name, pkg.summary))
+        result.sort()
+        for r in result:
+            print "(%s) %-25s: %s" % r
         return None, ""
 
 def config_hook(conduit):
