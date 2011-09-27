@@ -20,7 +20,7 @@
 from yum.plugins import TYPE_INTERACTIVE
 import re
 
-MATCH_ON_PACKAGE="~(?P<where_p>[n])(?P<what_p>[^~]*)"
+MATCH_ON_PACKAGE="~(?P<where_p>[nd])(?P<what_p>[^~]*)"
 MATCH_ON_LIST="~(?P<where_l>[i])"
 
 MATCH_ALL=MATCH_ON_PACKAGE + "|" + MATCH_ON_LIST
@@ -32,13 +32,19 @@ def _match_pkg_name(package, name):
     m = re.search(name, package.name)
     return (m != None)
 
+def _match_pkg_desc(package, desc):
+    m = re.search(desc, package.description)
+    return (m != None)
+
 def _filter_list_installed(pkglist):
-    pkglist.available = None
+    pkglist.available = []
     return pkglist
 
 def _build_pkg_filter(where, what):
     if where == 'n':
         return (_match_pkg_name, what)
+    elif where == 'd':
+        return (_match_pkg_desc, what)
     else:
         return None
 
@@ -74,7 +80,7 @@ class SearchexCommand:
         pass
 
     def doCommand(self, base, basecmd, extcmds):
-        import pdb;pdb.set_trace()
+        #import pdb;pdb.set_trace()
         match_on_list = []
         match_on_pkg = []
 
