@@ -23,6 +23,10 @@ import re
 requires_api_version = '2.5'
 plugin_type = (TYPE_INTERACTIVE,)
 
+def _match_name(package, name):
+    m = re.search(name, package.name)
+    return (m != None)
+
 class SearchexCommand:
     def getNames(self):
         return ['searchex']
@@ -37,6 +41,12 @@ class SearchexCommand:
         pass
 
     def doCommand(self, base, basecmd, extcmds):
+        import pdb;pdb.set_trace()
+        pkglist=base.returnPkgLists("")
+        for pkg in pkglist.available:
+            for pattern in re.finditer("~(?P<where>[n])(?P<what>[^~]*)", extcmds[0]):
+                if _match_name(pkg, pattern.group('what')):
+                    print "%s: %s" % (pkg.name, pkg.summary)
         return None, ""
 
 def config_hook(conduit):
