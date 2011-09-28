@@ -20,7 +20,7 @@
 from yum.plugins import TYPE_INTERACTIVE
 import re
 
-MATCH_ON_PACKAGE="~(?P<where_p>[dns])(?P<what_p>[^~]*)"
+MATCH_ON_PACKAGE="~(?P<where_p>[dDns])(?P<what_p>[^~]*)"
 MATCH_ON_LIST="~(?P<where_l>[i])"
 
 MATCH_ALL=MATCH_ON_PACKAGE + "|" + MATCH_ON_LIST
@@ -41,6 +41,9 @@ def _match_pkg_desc(package, desc):
 def _match_pkg_summary(package, summary):
     return _match_pkg_field(package, package.summary, summary)
 
+def _match_pkg_desc_or_summary(package, text):
+    return _match_pkg_summary(package, text) or _match_pkg_desc(package, text)
+
 def _filter_list_installed(pkglist):
     pkglist.available = []
     return pkglist
@@ -48,6 +51,8 @@ def _filter_list_installed(pkglist):
 def _build_pkg_filter(where, what):
     if where == 'd':
         return [(_match_pkg_desc, what)]
+    elif where == 'D':
+        return [(_match_pkg_desc_or_summary, what)]
     elif where == 'n':
         return [(_match_pkg_name, what)]
     elif where == 's':
