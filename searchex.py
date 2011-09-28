@@ -42,17 +42,17 @@ def _filter_list_installed(pkglist):
 
 def _build_pkg_filter(where, what):
     if where == 'n':
-        return (_match_pkg_name, what)
+        return [(_match_pkg_name, what)]
     elif where == 'd':
-        return (_match_pkg_desc, what)
+        return [(_match_pkg_desc, what)]
     else:
-        return None
+        return []
 
 def _build_list_filter(where):
     if where == 'i':
-        return _filter_list_installed
+        return [_filter_list_installed]
     else:
-        return None
+        return []
 
 def _filter_package(package, filter):
     for f in filter:
@@ -86,12 +86,10 @@ class SearchexCommand:
         result = []
 
         for pattern in re.finditer(MATCH_ALL, extcmds[0]):
-            f=_build_list_filter(pattern.group('where_l'))
-            if f:
-                match_on_list.append(f)
-            f=_build_pkg_filter(pattern.group('where_p'), pattern.group('what_p'))
-            if f:
-                match_on_pkg.append(f)
+            f=_build_list_filter(pattern.group('where_l')) or []
+            match_on_list.extend(f)
+            f=_build_pkg_filter(pattern.group('where_p'), pattern.group('what_p')) or []
+            match_on_pkg.extend(f)
 
         pkglist=_filter_list(base.returnPkgLists(""), match_on_list)
         for pkg in pkglist.installed:
