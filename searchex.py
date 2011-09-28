@@ -20,7 +20,7 @@
 from yum.plugins import TYPE_INTERACTIVE
 import re
 
-MATCH_ON_PACKAGE="~(?P<where_p>[nd])(?P<what_p>[^~]*)"
+MATCH_ON_PACKAGE="~(?P<where_p>[dns])(?P<what_p>[^~]*)"
 MATCH_ON_LIST="~(?P<where_l>[i])"
 
 MATCH_ALL=MATCH_ON_PACKAGE + "|" + MATCH_ON_LIST
@@ -28,23 +28,30 @@ MATCH_ALL=MATCH_ON_PACKAGE + "|" + MATCH_ON_LIST
 requires_api_version = '2.5'
 plugin_type = (TYPE_INTERACTIVE,)
 
+def _match_pkg_field(package, field, text):
+    m = re.search(text, field)
+    return m != None
+
 def _match_pkg_name(package, name):
-    m = re.search(name, package.name)
-    return (m != None)
+    return _match_pkg_field(package, package.name, name)
 
 def _match_pkg_desc(package, desc):
-    m = re.search(desc, package.description)
-    return (m != None)
+    return _match_pkg_field(package, package.description, desc)
+
+def _match_pkg_summary(package, summary):
+    return _match_pkg_field(package, package.summary, summary)
 
 def _filter_list_installed(pkglist):
     pkglist.available = []
     return pkglist
 
 def _build_pkg_filter(where, what):
-    if where == 'n':
-        return [(_match_pkg_name, what)]
-    elif where == 'd':
+    if where == 'd':
         return [(_match_pkg_desc, what)]
+    elif where == 'n':
+        return [(_match_pkg_name, what)]
+    elif where == 's':
+        return [(_match_pkg_summary, what)]
     else:
         return []
 
@@ -80,7 +87,6 @@ class SearchexCommand:
         pass
 
     def doCommand(self, base, basecmd, extcmds):
-        #import pdb;pdb.set_trace()
         match_on_list = []
         match_on_pkg = []
         result = []
@@ -92,6 +98,7 @@ class SearchexCommand:
             match_on_pkg.extend(f)
 
         pkglist=_filter_list(base.returnPkgLists(""), match_on_list)
+        #import pdb;pdb.set_trace()
         for pkg in pkglist.installed:
             if _filter_package(pkg, match_on_pkg) and ("i", pkg.name, pkg.summary) not in result:
                 result.append (("i", pkg.name, pkg.summary))
