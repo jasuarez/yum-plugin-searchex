@@ -74,6 +74,12 @@ def _filter_list(pkglist, filter):
 
         
 class SearchexCommand:
+    def runFilter(self, pkglist, type_list):
+        for pkg in pkglist:
+            if _filter_package(pkg, self._match_on_pkg) and \
+                    (type_list, pkg.name, pkg.summary) not in self._result:
+                self._result.append ((type_list, pkg.name, pkg.summary))
+        
     def getNames(self):
         return ['searchex']
 
@@ -87,26 +93,26 @@ class SearchexCommand:
         pass
 
     def doCommand(self, base, basecmd, extcmds):
-        match_on_list = []
-        match_on_pkg = []
-        result = []
+        self._match_on_list = []
+        self._match_on_pkg = []
+        self._result = []
 
         for pattern in re.finditer(MATCH_ALL, extcmds[0]):
             f=_build_list_filter(pattern.group('where_l')) or []
-            match_on_list.extend(f)
+            self._match_on_list.extend(f)
             f=_build_pkg_filter(pattern.group('where_p'), pattern.group('what_p')) or []
-            match_on_pkg.extend(f)
+            self._match_on_pkg.extend(f)
 
-        pkglist=_filter_list(base.returnPkgLists(""), match_on_list)
+        pkglist=_filter_list(base.returnPkgLists(""), self._match_on_list)
         #import pdb;pdb.set_trace()
-        for pkg in pkglist.installed:
-            if _filter_package(pkg, match_on_pkg) and ("i", pkg.name, pkg.summary) not in result:
-                result.append (("i", pkg.name, pkg.summary))
-        for pkg in pkglist.available:
-            if _filter_package(pkg, match_on_pkg) and ("a", pkg.name, pkg.summary) not in result:
-                result.append(("a", pkg.name, pkg.summary))
-        result.sort()
-        for r in result:
+        self.runFilter(pkglist.installed, "i")
+        self.runFilter(pkglist.available, "a")
+        self.runFilter(pkglist.extras, "e")
+        self.runFilter(pkglist.updates, "u")
+        self.runFilter(pkglist.obsoletes, "o")
+        self.runFilter(pkglist.recent, "r")
+        self._result.sort()
+        for r in self._result:
             print "(%s) %-25s: %s" % r
         return None, ""
 
