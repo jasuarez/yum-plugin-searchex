@@ -103,14 +103,13 @@ class SearchexCommand:
             f=_build_pkg_filter(pattern.group('where_p'), pattern.group('what_p')) or []
             self._match_on_pkg.extend(f)
 
-        pkglist=_filter_list(base.returnPkgLists(""), self._match_on_list)
-        #import pdb;pdb.set_trace()
-        self.runFilter(pkglist.installed, "i")
-        self.runFilter(pkglist.available, "a")
-        self.runFilter(pkglist.extras, "e")
-        self.runFilter(pkglist.updates, "u")
-        self.runFilter(pkglist.obsoletes, "o")
-        self.runFilter(pkglist.recent, "r")
+        ypl=_filter_list(base.returnPkgLists(""), self._match_on_list)
+        self.runFilter(ypl.installed, "i")
+        self.runFilter(ypl.available, "a")
+        self.runFilter(ypl.extras, "e")
+        self.runFilter(ypl.updates, "u")
+        self.runFilter(ypl.obsoletes, "o")
+        self.runFilter(ypl.recent, "r")
         self._result.sort()
         for r in self._result:
             print "(%s) %-25s: %s" % r
