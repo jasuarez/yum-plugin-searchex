@@ -98,24 +98,26 @@ class SearchexCommand:
         pass
 
     def doCommand(self, base, basecmd, extcmds):
-        self._match_on_list = []
-        self._match_on_pkg = []
         self._result = []
 
-        for pattern in re.finditer(MATCH_ALL, extcmds[0]):
-            f=_build_list_filter(pattern.group('where_l')) or []
-            self._match_on_list.extend(f)
-            f=_build_pkg_filter(pattern.group('where_p'), pattern.group('what_p')) or []
-            self._match_on_pkg.extend(f)
+        for extcmd in extcmds:
+            self._match_on_list = []
+            self._match_on_pkg = []
+            for pattern in re.finditer(MATCH_ALL, extcmd):
+                f=_build_list_filter(pattern.group('where_l')) or []
+                self._match_on_list.extend(f)
+                f=_build_pkg_filter(pattern.group('where_p'), pattern.group('what_p')) or []
+                self._match_on_pkg.extend(f)
 
-        ypl=_filter_list(base.returnPkgLists(""), self._match_on_list)
-        self.runFilter(ypl.installed, "i")
-        self.runFilter(ypl.available, "a")
-        self.runFilter(ypl.extras, "e")
-        self.runFilter(ypl.updates, "u")
-        self.runFilter(ypl.obsoletes, "o")
-        self.runFilter(ypl.recent, "r")
-        self._result.sort()
+            ypl=_filter_list(base.returnPkgLists(""), self._match_on_list)
+            self.runFilter(ypl.installed, "i")
+            self.runFilter(ypl.available, "a")
+            self.runFilter(ypl.extras, "e")
+            self.runFilter(ypl.updates, "u")
+            self.runFilter(ypl.obsoletes, "o")
+            self.runFilter(ypl.recent, "r")
+            self._result.sort()
+
         for r in self._result:
             print "(%s) %-25s: %s" % r
         return None, ""
