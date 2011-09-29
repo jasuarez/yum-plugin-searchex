@@ -22,7 +22,7 @@ import re
 
 MATCH_ON_PACKAGE="~(?P<where_p>[dDns])(?P<what_p>[^~]*)"
 MATCH_ON_PACKAGE_NAME="(?P<what_n>[^~]+)"
-MATCH_ON_LIST="~(?P<where_l>[iou])"
+MATCH_ON_LIST="~(?P<where_l>[aiou])"
 MATCH_UNKNOWN="(?P<what_u>~.)"
 
 MATCH_ALL=MATCH_ON_PACKAGE + "|" + MATCH_ON_LIST + "|" \
@@ -49,6 +49,14 @@ def _match_pkg_desc_or_summary(package, text):
 
 def _filter_list_installed(pkglist):
     pkglist.available = []
+    pkglist.extras = []
+    pkglist.updates = []
+    pkglist.obsoletes = []
+    pkglist.recent = []
+    return pkglist
+
+def _filter_list_available(pkglist):
+    pkglist.installed = []
     pkglist.extras = []
     pkglist.updates = []
     pkglist.obsoletes = []
@@ -84,11 +92,13 @@ def _build_pkg_filter(where, what):
         return []
 
 def _build_list_filter(where):
-    if where == 'i':
+    if where == 'a':
+        return [_filter_list_available]
+    elif where == 'i':
         return [_filter_list_installed]
-    if where == 'o':
+    elif where == 'o':
         return [_filter_list_obsoletes]
-    if where == 'u':
+    elif where == 'u':
         return [_filter_list_updates]
     else:
         return []
