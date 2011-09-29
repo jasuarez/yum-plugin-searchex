@@ -20,10 +20,10 @@
 from yum.plugins import TYPE_INTERACTIVE
 import re
 
-MATCH_ON_PACKAGE="~(?P<where_p>[dDns])(?P<what_p>[^~]*)"
+MATCH_ON_PACKAGE="~(?P<invert_p>[\+-]?)(?P<where_p>[dDns])(?P<what_p>[^~]*)"
 MATCH_ON_PACKAGE_NAME="(?P<what_n>[^~]+)"
-MATCH_ON_LIST="~(?P<where_l>[aiou])"
-MATCH_UNKNOWN="(?P<what_u>~.)"
+MATCH_ON_LIST="~(?P<invert_l>[\+-]?)(?P<where_l>[aiou])"
+MATCH_UNKNOWN="(?P<what_u>~[\+-]?.)"
 
 MATCH_ALL=MATCH_ON_PACKAGE + "|" + MATCH_ON_LIST + "|" \
     + MATCH_ON_PACKAGE_NAME + "|" + MATCH_UNKNOWN
@@ -31,87 +31,107 @@ MATCH_ALL=MATCH_ON_PACKAGE + "|" + MATCH_ON_LIST + "|" \
 requires_api_version = '2.5'
 plugin_type = (TYPE_INTERACTIVE,)
 
-def _match_pkg_field(package, field, text):
+def _match_pkg_field(package, field, text, invert):
     m = re.search(text, field, re.IGNORECASE)
-    return m != None
+    if invert:
+        return m == None
+    else:
+        return m != None
 
-def _match_pkg_name(package, name):
-    return _match_pkg_field(package, package.name, name)
+def _match_pkg_name(package, name, invert=False):
+    return _match_pkg_field(package, package.name, name, invert)
 
-def _match_pkg_desc(package, desc):
-    return _match_pkg_field(package, package.description, desc)
+def _match_pkg_desc(package, desc, invert=False):
+    return _match_pkg_field(package, package.description, desc, invert)
 
-def _match_pkg_summary(package, summary):
-    return _match_pkg_field(package, package.summary, summary)
+def _match_pkg_summary(package, summary, invert=False):
+    return _match_pkg_field(package, package.summary, summary, invert)
 
-def _match_pkg_desc_or_summary(package, text):
-    return _match_pkg_summary(package, text) or _match_pkg_desc(package, text)
+def _match_pkg_desc_or_summary(package, text, invert=False):
+    if invert:
+        return _match_pkg_summary(package, text, invert) and \
+            _match_pkg_desc(package, text, invert)
+    else:
+        return _match_pkg_summary(package, text, invert) or \
+            _match_pkg_desc(package, text, invert)
 
-def _filter_list_installed(pkglist):
-    pkglist.available = []
-    pkglist.extras = []
-    pkglist.updates = []
-    pkglist.obsoletes = []
-    pkglist.recent = []
+def _filter_list_installed(pkglist, invert=False):
+    if invert:
+        pkglist.installed = []
+    else:
+        pkglist.available = []
+        pkglist.extras = []
+        pkglist.updates = []
+        pkglist.obsoletes = []
+        pkglist.recent = []
     return pkglist
 
-def _filter_list_available(pkglist):
-    pkglist.installed = []
-    pkglist.extras = []
-    pkglist.updates = []
-    pkglist.obsoletes = []
-    pkglist.recent = []
+def _filter_list_available(pkglist, invert=False):
+    if invert:
+        pkglist.available = []
+    else:
+        pkglist.installed = []
+        pkglist.extras = []
+        pkglist.updates = []
+        pkglist.obsoletes = []
+        pkglist.recent = []
     return pkglist
 
-def _filter_list_obsoletes(pkglist):
-    pkglist.available = []
-    pkglist.installed = []
-    pkglist.extras = []
-    pkglist.updates = []
-    pkglist.recent = []
+def _filter_list_obsoletes(pkglist, invert=False):
+    if invert:
+        pkglist.obsoletes = []
+    else:
+        pkglist.available = []
+        pkglist.installed = []
+        pkglist.extras = []
+        pkglist.updates = []
+        pkglist.recent = []
     return pkglist
 
-def _filter_list_updates(pkglist):
-    pkglist.available = []
-    pkglist.installed = []
-    pkglist.extras = []
-    pkglist.obsoletes = []
-    pkglist.recent = []
+def _filter_list_updates(pkglist, invert=False):
+    if invert:
+        pkglist.updates = []
+    else:
+        pkglist.available = []
+        pkglist.installed = []
+        pkglist.extras = []
+        pkglist.obsoletes = []
+        pkglist.recent = []
     return pkglist
 
-def _build_pkg_filter(where, what):
+def _build_pkg_filter(where, what, invert=False):
     if where == 'd':
-        return [(_match_pkg_desc, what)]
+        return [(_match_pkg_desc, what, invert)]
     elif where == 'D':
-        return [(_match_pkg_desc_or_summary, what)]
+        return [(_match_pkg_desc_or_summary, what, invert)]
     elif where == 'n':
-        return [(_match_pkg_name, what)]
+        return [(_match_pkg_name, what, invert)]
     elif where == 's':
-        return [(_match_pkg_summary, what)]
+        return [(_match_pkg_summary, what, invert)]
     else:
         return []
 
-def _build_list_filter(where):
+def _build_list_filter(where, invert=False):
     if where == 'a':
-        return [_filter_list_available]
+        return [(_filter_list_available, invert)]
     elif where == 'i':
-        return [_filter_list_installed]
+        return [(_filter_list_installed, invert)]
     elif where == 'o':
-        return [_filter_list_obsoletes]
+        return [(_filter_list_obsoletes, invert)]
     elif where == 'u':
-        return [_filter_list_updates]
+        return [(_filter_list_updates, invert)]
     else:
         return []
 
 def _filter_package(package, filter):
     for f in filter:
-        if not f[0](package, f[1]):
+        if not f[0](package, f[1], f[2]):
             return None
     return package
 
 def _filter_list(pkglist, filter):
     for f in filter:
-        pkglist=f(pkglist)
+        pkglist=f[0](pkglist, f[1])
     return pkglist
 
         
@@ -148,9 +168,12 @@ class SearchexCommand:
                     f=_build_pkg_filter('n', pattern.group('what_n'))
                     self._match_on_pkg.extend(f)
                     continue
-                f=_build_list_filter(pattern.group('where_l')) or []
+                f=_build_list_filter(pattern.group('where_l'), \
+                                         pattern.group('invert_l') == '-') or []
                 self._match_on_list.extend(f)
-                f=_build_pkg_filter(pattern.group('where_p'), pattern.group('what_p')) or []
+                f=_build_pkg_filter(pattern.group('where_p'), \
+                                        pattern.group('what_p'), \
+                                        pattern.group('invert_p') == '-') or []
                 self._match_on_pkg.extend(f)
 
             ypl=_filter_list(base.returnPkgLists(""), self._match_on_list)
