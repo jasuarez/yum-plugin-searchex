@@ -30,7 +30,7 @@ requires_api_version = '2.5'
 plugin_type = (TYPE_INTERACTIVE,)
 
 def _match_pkg_field(package, field, text):
-    m = re.search(text, field)
+    m = re.search(text, field, re.IGNORECASE)
     return m != None
 
 def _match_pkg_name(package, name):
