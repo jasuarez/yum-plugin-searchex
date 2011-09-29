@@ -47,6 +47,10 @@ def _match_pkg_desc_or_summary(package, text):
 
 def _filter_list_installed(pkglist):
     pkglist.available = []
+    pkglist.extras = []
+    pkglist.updates = []
+    pkglist.obsoletes = []
+    pkglist.recent = []
     return pkglist
 
 def _build_pkg_filter(where, what):
