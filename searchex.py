@@ -23,8 +23,10 @@ import re
 MATCH_ON_PACKAGE="~(?P<where_p>[dDns])(?P<what_p>[^~]*)"
 MATCH_ON_PACKAGE_NAME="(?P<what_n>[^~]+)"
 MATCH_ON_LIST="~(?P<where_l>[i])"
+MATCH_UNKNOWN="(?P<what_u>~.)"
 
-MATCH_ALL=MATCH_ON_PACKAGE + "|" + MATCH_ON_LIST + "|" + MATCH_ON_PACKAGE_NAME
+MATCH_ALL=MATCH_ON_PACKAGE + "|" + MATCH_ON_LIST + "|" \
+    + MATCH_ON_PACKAGE_NAME + "|" + MATCH_UNKNOWN
 
 requires_api_version = '2.5'
 plugin_type = (TYPE_INTERACTIVE,)
@@ -109,13 +111,17 @@ class SearchexCommand:
             self._match_on_list = []
             self._match_on_pkg = []
             for pattern in re.finditer(MATCH_ALL, extcmd):
+                if pattern.group('what_u'):
+                    print "Unknown pattern \"%s\"" % pattern.group('what_u')
+                    return None, ""
+                if pattern.group('what_n'):
+                    f=_build_pkg_filter('n', pattern.group('what_n'))
+                    self._match_on_pkg.extend(f)
+                    continue
                 f=_build_list_filter(pattern.group('where_l')) or []
                 self._match_on_list.extend(f)
                 f=_build_pkg_filter(pattern.group('where_p'), pattern.group('what_p')) or []
                 self._match_on_pkg.extend(f)
-                if pattern.group('what_n'):
-                    f=_build_pkg_filter('n', pattern.group('what_n'))
-                    self._match_on_pkg.extend(f)
 
             ypl=_filter_list(base.returnPkgLists(""), self._match_on_list)
             self.runFilter(ypl.installed, "i")
