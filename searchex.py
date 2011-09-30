@@ -20,7 +20,7 @@
 from yum.plugins import TYPE_INTERACTIVE
 import re
 
-MATCH_ON_PACKAGE="~(?P<invert_p>[\+-]?)(?P<where_p>[dDns])(?P<what_p>[^~]*)"
+MATCH_ON_PACKAGE="~(?P<invert_p>[\+-]?)(?P<where_p>[dDnRs])(?P<what_p>[^~]*)"
 MATCH_ON_PACKAGE_NAME="(?P<what_n>[^~]+)"
 MATCH_ON_LIST="~(?P<invert_l>[\+-]?)(?P<where_l>[aiou])"
 MATCH_UNKNOWN="(?P<what_u>~[\+-]?.)"
@@ -46,6 +46,9 @@ def _match_pkg_desc(package, desc, invert=False):
 
 def _match_pkg_summary(package, summary, invert=False):
     return _match_pkg_field(package, package.summary, summary, invert)
+
+def _match_pkg_repo(package, repository, invert=False):
+    return _match_pkg_field(package, package.ui_from_repo, repository, invert)
 
 def _match_pkg_desc_or_summary(package, text, invert=False):
     if invert:
@@ -106,6 +109,8 @@ def _build_pkg_filter(where, what, invert=False):
         return [(_match_pkg_desc_or_summary, what, invert)]
     elif where == 'n':
         return [(_match_pkg_name, what, invert)]
+    elif where == 'R':
+        return [(_match_pkg_repo, what, invert)]
     elif where == 's':
         return [(_match_pkg_summary, what, invert)]
     else:
