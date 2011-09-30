@@ -191,7 +191,7 @@ class SearchexCommand:
             self._result.sort()
 
         for r in self._result:
-            print "(%s) %-25s: %s" % r
+            print unicode("(%s) %-25s: %s" % r, errors='replace')
         return None, ""
 
 def config_hook(conduit):
