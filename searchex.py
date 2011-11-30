@@ -167,8 +167,7 @@ class SearchexCommand:
             self._match_on_pkg = []
             for pattern in re.finditer(MATCH_ALL, extcmd):
                 if pattern.group('what_u'):
-                    print "Unknown pattern \"%s\"" % pattern.group('what_u')
-                    return None, ""
+                    return 1, ['Unknown pattern "%s"' % pattern.group('what_u')]
                 if pattern.group('what_n'):
                     f=_build_pkg_filter('n', pattern.group('what_n'))
                     self._match_on_pkg.extend(f)
@@ -192,7 +191,8 @@ class SearchexCommand:
 
         for r in self._result:
             print unicode("(%s) %-25s: %s" % r, errors='replace')
-        return None, ""
+
+        return 0, ['%d packages matched' % len(self._result)]
 
 def config_hook(conduit):
     '''
