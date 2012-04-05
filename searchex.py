@@ -145,7 +145,7 @@ class SearchexCommand:
         for pkg in pkglist:
             if _filter_package(pkg, self._match_on_pkg) and \
                     (type_list, pkg.name, pkg.summary) not in self._result:
-                self._result.append ((type_list, pkg.name, pkg.summary))
+                self._result.append ((type_list, pkg.name + "." + pkg.arch, pkg.summary))
         
     def getNames(self):
         return ['searchex']
@@ -190,7 +190,7 @@ class SearchexCommand:
             self._result.sort()
 
         for r in self._result:
-            print unicode("(%s) %-25s: %s" % r, errors='replace')
+            print unicode("(%s) %-30s: %s" % r, errors='replace')
 
         return 0, ['%d packages matched' % len(self._result)]
 
