@@ -20,7 +20,7 @@
 from yum.plugins import TYPE_INTERACTIVE
 import re
 
-MATCH_ON_PACKAGE="~(?P<invert_p>[\+-]?)(?P<where_p>[dDnRs])(?P<what_p>[^~]*)"
+MATCH_ON_PACKAGE="~(?P<invert_p>[\+-]?)(?P<where_p>[dnRs])(?P<what_p>[^~]*)"
 MATCH_ON_PACKAGE_NAME="(?P<what_n>[^~]+)"
 MATCH_ON_LIST="~(?P<invert_l>[\+-]?)(?P<where_l>[aiou])"
 MATCH_UNKNOWN="(?P<what_u>~[\+-]?.)"
@@ -104,8 +104,6 @@ def _filter_list_updates(pkglist, invert=False):
 
 def _build_pkg_filter(where, what, invert=False):
     if where == 'd':
-        return [(_match_pkg_desc, what, invert)]
-    elif where == 'D':
         return [(_match_pkg_desc_or_summary, what, invert)]
     elif where == 'n':
         return [(_match_pkg_name, what, invert)]
