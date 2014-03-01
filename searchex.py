@@ -13,7 +13,7 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 #
 #
-# Copyright Igalia, S.L. 2011
+# Copyright Igalia, S.L. 2011-2014
 #
 # Author: Juan A. Suarez Romero <jasuarez@igalia.com>
 
