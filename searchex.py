@@ -22,7 +22,7 @@ import re
 
 MATCH_ON_PACKAGE="~(?P<invert_p>[\+-]?)(?P<where_p>[dnRs])(?P<what_p>[^~]*)"
 MATCH_ON_PACKAGE_NAME="(?P<what_n>[^~]+)"
-MATCH_ON_LIST="~(?P<invert_l>[\+-]?)(?P<where_l>[aiou])"
+MATCH_ON_LIST="~(?P<invert_l>[\+-]?)(?P<where_l>[aioru])"
 MATCH_UNKNOWN="(?P<what_u>~[\+-]?.)"
 
 MATCH_ALL=MATCH_ON_PACKAGE + "|" + MATCH_ON_LIST + "|" \
